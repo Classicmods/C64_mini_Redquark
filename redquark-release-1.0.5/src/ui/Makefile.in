@@ -1,0 +1,199 @@
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+defs = @DEFS@ -DBUILD_DATE=\"$(shell date +'%d-%m-%Y')\" -DBUILD_COMMIT=\"$(shell git rev-parse HEAD)\"
+
+TARGET = the64
+
+MAJOR := 1
+MINOR := 0
+PATCH := 5
+
+VER_DEF := -DMAJOR=$(MAJOR) -DMINOR=$(MINOR) -DPATCH=$(PATCH)
+
+MAINSRC ?= ..
+
+CURRENTDIR	= .
+SRCDIR		= $(CURRENTDIR)/src
+OUTPUTDIR	= $(CURRENTDIR)/output
+OBJDIR      = $(CURRENTDIR)/obj
+
+AS	    = @AS@
+CC	    = @CC@
+LD	    = @LD@
+CXX	    = @CXX@
+STRIP	= @STRIP@
+OBJCOPY	= @OBJCOPY@
+OBJDUMP	= @OBJDUMP@
+
+FREETYPE_GL  ?= $(MAINSRC)/freetype-gl
+VICE         ?= $(MAINSRC)/vice2
+
+FLASHLIGHT_INC= @FLASHLIGHT_INC@ 
+FLASHLIGHT_LIB= @FLASHLIGHT_LIB@ 
+MALIAW_INC    = @MALIAW_INC@
+MALIAW_LIB    = @MALIAW_LIB@
+COMMON_DIR    = $(MAINSRC)/common
+FREETYPE_DIR  = $(MAINSRC)/freetype
+
+PKG_LIBS=\
+@EVDEV_LIBS@ \
+@HARFBUZZ_LIBS@ \
+@EVDEV_LIBS@ \
+@ALSA_LIBS@ \
+@JPEG_LIBS@ \
+@ZLIB_LIBS@ \
+@GLESV2_LIBS@ \
+@EGL_LIBS@ \
+@PNG_LIBS@ \
+@FREETYPE2_LIBS@ \
+@HARFBUZZ_LIBS@ \
+
+PKG_CFLAGS=\
+@EVDEV_CFLAGS@ \
+@ALSA_CFLAGS@ \
+@JPEG_CFLAGS@ \
+@ZLIB_CFLAGS@ \
+@GLESV2_CFLAGS@ \
+@EGL_CFLAGS@ \
+@PNG_CFLAGS@ \
+@FREETYPE2_CFLAGS@ \
+@HARFBUZZ_CFLAGS@ \
+
+INCS=\
+$(COMMON_DIR) \
+$(MALIAW_INC) \
+$(FLASHLIGHT_INC) \
+$(FREETYPE_DIR) \
+$(FREETYPE_GL) \
+$(MAINSRC)/ui \
+$(MAINSRC)/viceport \
+$(MAINSRC)/input \
+$(VICE)/src \
+gamelibrary \
+../vbuild \
+
+LIB_DIR=\
+$(dir $(shell $(CC) -print-libgcc-file-name)) \
+$(FLASHLIGHT_LIB) \
+$(MALIAW_LIB) \
+$(COMMON_DIR) \
+$(FREETYPE_DIR) \
+$(FREETYPE_GL_DIR) \
+$(MAINSRC)/input \
+$(MAINSRC)/vbuild \
+gamelibrary \
+
+SRC_OBJS =\
+path.o \
+gameshot.o \
+c64.o \
+summary.o \
+carousel.o \
+gamelist.o \
+selector.o \
+toolbar.o \
+mainmenu.o \
+gridmenu.o \
+ig_menu.o \
+fontatlas.o \
+fonts.o \
+decoration.o \
+textpane.o \
+ui_sound.o \
+screen_fader.o \
+display_menu.o \
+fs_menu.o \
+locale.o \
+locale_menu.o \
+settings_menu.o \
+keyboard_menu.o \
+factory_reset_menu.o \
+system_menu.o \
+ip_notice.o \
+suspend_menu.o \
+suspendresume.o \
+poweroff.o \
+ui_joystick.o \
+vkeyboard.o \
+firmware.o \
+settings.o \
+test_mode.o \
+usb.o \
+ui.o
+
+LIBS = \
+	vicemain \
+	asound \
+	jpeg \
+	z \
+	dl \
+	nsl \
+	m \
+	dl \
+	GLESv2 \
+	EGL \
+	MaliAW \
+	png \
+	m \
+	tsfjoy \
+	flashlight  \
+	tsfcommon  \
+	tsffreetype \
+	freetype  \
+	m \
+	gamelibrary \
+	harfbuzz \
+
+ALLINC  = $(addprefix -I,$(INCS))    $(PKG_CFLAGS)
+ALLLIB  = $(addprefix -L,$(LIB_DIR)) $(PKG_LIBS)
+LDLIBS  = $(addprefix -l,$(LIBS))
+OBJS    = $(addprefix $(OBJDIR)/,$(SRC_OBJS))
+
+TARGET_DEF= $(addprefix -DTARGET_,$(BUILD_TARGET))
+
+CFLAGS 	= $(TARGET_DEF) -g -pthread @CONF_CFLAGS@ -O3 -Wall $(defs) $(ALLINC) $(VER_DEF)
+LDFLAGS = $(ALLLIB) @LIBX11@ -pthread
+
+# Default goal
+.PHONY: all
+
+
+all: build
+
+buildgamelib:
+	$(MAKE) -C gamelibrary
+
+# Define an implicit rule for assembler files
+# to run them through C preprocessor
+#
+
+$(OBJDIR)/%.o: %.c $(HEAD)
+	@echo CC	$<
+	@$(CC) -c $(CFLAGS) -o $@ $<
+
+# Make targets
+#
+.PHONY: build build_prep clean buildgamelib
+
+build: build_prep buildgamelib $(TARGET)
+
+$(TARGET): buildgamelib $(OBJS)
+	@echo LD $@
+	@$(CXX) $(LDFLAGS) $(OBJS) -o $@ $(LDLIBS)
+	$(STRIP) $(TARGET)
+
+build_prep:
+	@mkdir -p $(OUTPUTDIR)
+	@mkdir -p $(OBJDIR)
+
+strip:
+	$(STRIP) $(TARGET)
+
+clean:
+	@echo Cleaning...
+	@echo Files:
+	rm -f $(OBJS) $(TARGET)
+	$(MAKE) -C gamelibrary clean
+
+install:
+	../$(MAINSRC)/install-sh -c $(TARGET) ${exec_prefix}/bin/$(TARGET)

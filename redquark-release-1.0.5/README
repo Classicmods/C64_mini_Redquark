@@ -1,0 +1,3 @@
+Place packages freetype-gl and vice2 in ./src/ directory (or symlink to them).
+Run ./configure and point it at flashlight and maliaw (--with-flashlight=... --with-maliaw=...)
+make

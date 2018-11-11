@@ -1,0 +1,94 @@
+# Generated automatically from Makefile.in by configure.
+SHELL = /bin/sh
+
+MAINSRC ?= ..
+
+FREETYPE_GL ?= $(MAINSRC)/freetype-gl
+
+prefix = /usr/local
+exec_prefix = ${prefix}
+OURLIB = libtsffreetype.a
+
+CC     = @CC@
+SINC   = .
+INC    = $(FREETYPE_GL)
+AINC   = . $(INC)
+OBJ	   = ./obj
+LOBJ   = ./obj/local
+
+VER_MAJOR = 1
+VER_MINOR = 20
+VERSION = $(VER_MAJOR).$(VER_MINOR)
+
+PKG_CFLAGS = \
+@HARFBUZZ_CFLAGS@ \
+@FREETYPE2_CFLAGS@ \
+
+ALLINC = $(addprefix -I,$(AINC)) $(PKG_CFLAGS)
+
+CFLAGS = -g @CONF_CFLAGS@ -O3 -pthread -c -fPIC  $(ALLINC)
+
+DIRS= obj
+
+LOBJF = \
+harfbuzz_kerning.o \
+
+OBJF  = \
+texture-font.o \
+texture-atlas.o \
+distance-field.o \
+font-manager.o \
+utf8-utils.o \
+edtaa3func.o \
+vector.o
+
+HEADF = \
+tsffont.h
+
+HEAD    = $(addprefix $(SINC)/,$(HEADF))
+OBJS    = $(addprefix $(OBJ)/,$(OBJF))
+LOBJS   = $(addprefix $(LOBJ)/,$(LOBJF))
+MDBOBJS = $(addprefix $(OBJ)/,$(MEMDBOBJF))
+
+# If compiling as development, then alter CFLAGS
+#
+devel := CFLAGS += -g -DDEVELOPMENT
+
+all: hello dirs $(OURLIB) $(OURLIBSO)
+	@echo Done
+
+hello:
+	@echo Building freetype gl $(VERSION)
+	@echo
+
+$(OURLIB): $(OBJS) $(LOBJS)
+	@echo Creating library $@
+	@rm -f $@
+	@ar -r $@ $(OBJS) $(LOBJS)
+
+$(OBJ)/%.o: $(FREETYPE_GL)/%.c $(HEAD)
+	@echo CC	$<
+	@$(CC) $(CFLAGS) -o $@	$<
+
+$(LOBJ)/%.o: %.c $(HEAD)
+	@echo CC	$<
+	@$(CC) $(CFLAGS) -o $@	$<
+
+fontemit: obj/local/makefont.o
+	@$(CC) $< -o $@ -L. -ltsffreetype -lm -lfreetype -lharfbuzz
+
+genfont: fontemit
+	[ -e Roboto-Italic.ttf ]  || ln -s ../../fs/usr/share/the64/ui/fonts/Roboto-Italic.ttf
+	[ -e Roboto-Regular.ttf ] || ln -s ../../fs/usr/share/the64/ui/fonts/Roboto-Regular.ttf
+	./fontemit --header tsffont.h --texture 420 --rendermode sdf
+	@echo
+	cp font_atlas.bin ../../fs/usr/share/the64/ui/textures/font_atlas.bin
+
+clean:
+	rm -f $(OBJ)/*.o $(OURLIB) $(OURLIBSO)
+	rm -f $(OBJ)/local/*.o $(OURLIB) $(OURLIBSO)
+
+dirs:
+	@[ -d obj ] || mkdir obj
+	@[ -d obj/local ] || mkdir obj/local
+

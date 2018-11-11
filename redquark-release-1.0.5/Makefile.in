@@ -1,0 +1,39 @@
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+
+ROOTDIR     := $(shell pwd)
+MAINSRC     := $(ROOTDIR)/src
+VICE        ?= $(MAINSRC)/vice2
+FREETYPE_GL ?= $(MAINSRC)/freetype-gl
+
+CARG := VICE=$(VICE) FREETYPE_GL=$(FREETYPE_GL) MAINSRC=$(MAINSRC)
+
+TARGET=all
+
+all: build
+
+build:
+	@$(MAKE) -C src $(CARG)
+
+clean:
+	@$(MAKE) -C src $(CARG) clean
+
+run:
+	THE64=$(ROOTDIR)/fs $(MAINSRC)/ui/the64
+
+install:
+	@./install-sh -t $(DESTDIR)${exec_prefix}/bin src/ui/the64
+	@echo Copy resource and assets tree into $(DESTDIR)${prefix}
+	@mkdir -p $(DESTDIR)${prefix}/share/the64/games
+	@cp -r fs/usr/share/the64/ui            $(DESTDIR)${prefix}/share/the64
+	@cp    fs/usr/share/the64/games/*.tsg   $(DESTDIR)${prefix}/share/the64/games
+	@cp -r fs/usr/share/the64/games/games   $(DESTDIR)${prefix}/share/the64/games
+	@cp -r fs/usr/share/the64/games/covers  $(DESTDIR)${prefix}/share/the64/games
+	@cp -r fs/usr/share/the64/games/screens $(DESTDIR)${prefix}/share/the64/games
+	@cp -r fs/etc/init.d 		  $(DESTDIR)/etc
+	@mkdir -p                     $(DESTDIR)${prefix}/lib/vice
+	@cp -r src/vice2/data/C64     $(DESTDIR)${prefix}/lib/vice
+	@cp -r src/vice2/data/DRIVES  $(DESTDIR)${prefix}/lib/vice
+	@cp -r src/vice2/data/PRINTER $(DESTDIR)${prefix}/lib/vice
+	@cp -r src/vice2/data/fonts   $(DESTDIR)${prefix}/lib/vice
+	@cp    data/*                 $(DESTDIR)${prefix}/lib/vice/C64

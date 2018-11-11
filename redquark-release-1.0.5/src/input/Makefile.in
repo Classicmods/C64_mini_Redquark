@@ -1,0 +1,63 @@
+# Generated automatically from Makefile.in by configure.
+SHELL = /bin/sh
+
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+defs = @DEFS@
+
+OURLIB = libtsfjoy.a
+
+MAINSRC ?= ..
+
+CC     = @CC@
+SINC   = 
+INC    = 
+AINC   = . $(INC)
+OBJ	   = ./obj
+
+VER_MAJOR = 1
+VER_MINOR = 20
+VERSION = $(VER_MAJOR).$(VER_MINOR)
+
+ALLINC = $(addprefix -I,$(AINC))
+
+PKG_CFLAGS=\
+@EVDEV_CFLAGS@ \
+
+FLASHLIGHT_INC= @FLASHLIGHT_INC@ 
+ALLINC += $(PKG_CFLAGS) -I$(FLASHLIGHT_INC)
+
+CFLAGS = -g @CONF_CFLAGS@ -O3 -pthread -c $(defs) $(ALLINC) 
+
+DIRS= obj
+
+OBJF  = \
+tsf_joystick.o
+
+HEADF = 
+
+HEAD    = $(addprefix $(SINC)/,$(HEADF))
+OBJS    = $(addprefix $(OBJ)/,$(OBJF))
+MDBOBJS = $(addprefix $(OBJ)/,$(MEMDBOBJF))
+
+all: hello dirs $(OURLIB) $(OURLIBSO)
+	@echo Done
+
+hello:
+	@echo Building the64 Joystick library $(VERSION)
+	@echo
+
+$(OURLIB): $(OBJS) $(HEAD)
+	@echo Creating library $@
+	@rm -f $@
+	@ar -r $@ $(OBJS)
+
+$(OBJ)/%.o: %.c $(HEAD)
+	@echo CC	$<
+	@$(CC) $(CFLAGS) -o $@	$<
+
+clean:
+	rm -f $(OBJ)/*.o $(OURLIB) $(OURLIBSO)
+
+dirs:
+	@[ -d obj ] || mkdir obj

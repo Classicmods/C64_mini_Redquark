@@ -1,0 +1,70 @@
+# Generated automatically from Makefile.in by configure.
+SHELL = /bin/sh
+
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+
+MAINSRC ?= ../..
+
+OURLIB = libgamelibrary.a
+
+i_libdir = $(DESTDIR)${exec_prefix}/lib
+
+CC     = @CC@
+AR     = @AR@
+SINC   = 
+MINC   = $(DESTDIR)${prefix}/include/phlib
+OBJ	   = ./obj
+
+VER_MAJOR = 1
+VER_MINOR = 20
+VERSION = $(VER_MAJOR).$(VER_MINOR)
+
+COMMON_DIR    = $(MAINSRC)/common
+FLASHLIGHT_INC= @FLASHLIGHT_INC@
+MALIAW_INC    = @MALIAW_INC@
+
+DIRS= obj
+
+INCS=\
+$(FLASHLIGHT_INC) \
+$(MALIAW_INC) \
+$(MAINSRC)/ui \
+$(COMMON_DIR) \
+$(MAINSRC)/input \
+$(MAINSRC)/viceport \
+
+OBJF  = \
+gamelibrary.o
+
+HEADF = 
+
+HEAD    = $(addprefix $(SINC)/,$(HEADF))
+OBJS    = $(addprefix $(OBJ)/,$(OBJF))
+MDBOBJS = $(addprefix $(OBJ)/,$(MEMDBOBJF))
+
+ALLINC= $(addprefix -I,$(INCS))
+CFLAGS = -g @CONF_CFLAGS@ -O3 -pthread -c $(ALLINC)
+
+
+all: hello dirs $(OURLIB) 
+	@echo Done
+
+hello:
+	@echo Building the64 gamelibrary lib 
+	@echo
+
+$(OURLIB): $(OBJS) $(HEAD)
+	@echo Creating library $@
+	@rm -f $@
+	@$(AR) -r $@ $(OBJS)
+
+$(OBJ)/%.o: %.c $(HEAD)
+	@echo CC	$<
+	@$(CC) $(CFLAGS) -o $@	$<
+
+clean:
+	rm -f $(OBJ)/*.o $(OURLIB)
+
+dirs:
+	@[ -d obj ] || mkdir obj

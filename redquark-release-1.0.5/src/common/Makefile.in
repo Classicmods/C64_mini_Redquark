@@ -1,0 +1,69 @@
+
+defs = @DEFS@
+MAINSRC ?= ..
+
+OURLIB = libtsfcommon.a
+
+CC     = @CC@
+SINC   = 
+INC    = 
+AINC   = . $(INC)
+OBJ	   = ./obj
+
+VER_MAJOR = 1
+VER_MINOR = 20
+VERSION = $(VER_MAJOR).$(VER_MINOR)
+
+INCS=\
+$(AINC) \
+$(MAINSRC)/mali/include \
+$(MAINSRC)/mali \
+
+ALLINC = $(addprefix -I,$(INCS))
+
+PKG_CFLAGS = \
+@GLESV2_CFLAGS@ \
+@EGL_CFLAGS@ \
+
+CFLAGS = -g @CONF_CFLAGS@ -O3 -pthread -c $(defs) $(ALLINC) $(PKG_LIBS)
+
+DIRS= obj
+
+OBJF  = \
+tsf_compress.o \
+tsf_crc.o \
+tsf_sha256.o \
+
+HEADF = 
+
+HEAD    = $(addprefix $(SINC)/,$(HEADF))
+OBJS    = $(addprefix $(OBJ)/,$(OBJF))
+MDBOBJS = $(addprefix $(OBJ)/,$(MEMDBOBJF))
+
+all: hello dirs $(OURLIB) $(OURLIBSO)
+	@echo Done
+
+hello:
+	@echo Building the64 common library $(VERSION)
+	@echo
+
+$(OURLIB): $(OBJS) $(HEAD)
+	@echo Creating library $@
+	@rm -f $@
+	@ar -r $@ $(OBJS)
+
+$(OBJ)/%.o: %.c $(HEAD)
+	@echo CC	$<
+	$(CC) $(CFLAGS) -o $@	$<
+
+$(OBJ)/%.ao: %.S $(HEAD)
+	@echo CC	$<
+	$(CC) $(CFLAGS) -o $@	$<
+
+clean:
+	rm -f $(OBJ)/*.o $(OBJ)/*.ao $(OURLIB) $(OURLIBSO)
+
+dirs:
+	@[ -d obj ] || mkdir obj
+
+#end
