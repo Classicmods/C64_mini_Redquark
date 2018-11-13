@@ -8,3 +8,5 @@ MASTER branch contains modifications. If you wish to make any modifications to t
 If you want untouched versions of Redquark then check the over branches in this repo.
 
 You can discuss any modifications or "hacking" with me or the team at our discord. https://discordapp.com/invite/8gygsrw
+
+https://modmyclassic.com/
